@@ -6,7 +6,7 @@ const productViewModel = {
   searchKeyword: ko.observable(""),
   // Product detail observable
   productDetail: ko.observable(),
-  pilotOffering: ko.observable(""), 
+  pilotOffering: ko.observable(""),
   addOnOffering: ko.observable(""),
   statusOptions: ["Created", "Assigned", "Accepted", "Completed", "Canceled"],
   selectedStatus: ko.observable(""),
@@ -133,7 +133,7 @@ const productViewModel = {
    console.log(itemsJson);
    productViewModel.itemAdded(itemsJson);
       },
-			// Screen-5 'End'
+  // Screen-5 'End'
   // Dynamic search result text on top of table
   searchResultText: ko.pureComputed(function () {
     return productViewModel.searchKeyword()
