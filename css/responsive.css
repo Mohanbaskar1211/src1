@@ -1,0 +1,33 @@
+/* Hide sidebar */
+@media (max-width: 991px) {
+  .m-res-top {
+    margin-top: 15px !important;
+  }
+
+  .p-res-top {
+    padding-top: 15px !important;
+  }
+
+  .p-res-right {
+    padding-right: 15px !important;
+  }
+
+  .p-res-0 {
+    padding: 0 !important;
+  }
+
+  .m-res-0 {
+    margin: 0 !important;
+  }
+
+  .m-res-bottom {
+    margin-bottom: 15px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .card-body.offering-details .offering-details-inner {
+    max-width: 100% !important;
+    float: left;
+  }
+}
