@@ -1,4 +1,3 @@
-var itemAddeddata = [];
 const productViewModel = {
   // Product list observable
   products: ko.observableArray([]),
@@ -17,10 +16,11 @@ const productViewModel = {
   // Generated offers
   productOffers: ko.mapping.fromJS([]),
   selectAllOffersFlag: ko.observable(false),
-  addToOffering: ko.observableArray([]),
-  itemSearchkeyword: ko.observable(""),
-  itemAdded: ko.observableArray([]),
-  itemIcon: ko.observable(""),
+  // Product Compositions
+  searchItemKeyword: ko.observable(""),
+  catalogItems: ko.observableArray([]),
+  productCompositions: ko.observableArray([]),
+
   accessModelOptions: ko.observableArray(
     _.find(offeringOptionsMaster, ["headerId", "accessModel"]).options
   ),
@@ -48,6 +48,9 @@ const productViewModel = {
     productViewModel.addOnOfferingId("");
     productViewModel.offeringOptions([]);
     productViewModel.productOffers.removeAll();
+    productViewModel.searchItemKeyword("");
+    productViewModel.catalogItems.removeAll();
+    productViewModel.productCompositions.removeAll();
   },
   searchProducts: function (viewAll) {
     if (viewAll) {
@@ -72,68 +75,6 @@ const productViewModel = {
         toastr.error("failed to get products.");
       });
   },
-  // Screen-5 'Start'
-			itemSearch: function (itemval) {
-
-				console.log('itemval------'+itemval);
-				if(itemval == true)
-				{
-					productViewModel.itemSearchkeyword("")
-				}
-				if(productViewModel.itemSearchkeyword().length > 0 || (itemval == true))
-				{
-					$.ajax({
-						type: "GET",
-						url: "https://sandbox.webcomcpq.com/customapi/executescript?scriptName=GetItemsApi&username=t_smili_integration&password=Apriori!123&domain=autodeskinc_dev",
-						data: {"Param":'{"ItemName":"'+productViewModel.itemSearchkeyword()+'"}'},
-						dataType: "json",
-						contentType: "application/json; charset=utf-8",
-					})
-					  .done(function (data) {
-
-						  data1 = JSON.parse(data);
-						  console.log(data1);
-						productViewModel.addToOffering(data1);
-						sendPostMessage();
-					  })
-					  .fail(function () {
-						toastr.error("failed to get products.");
-					  });
-				}
-				if(itemval !=true && itemval !=false)
-				{
-					console.log('1111111');
-					console.log(data1);
-
-					console.log('json_data----------111111');
-
-					var plus_hide = '.fa-plus-circle.'+itemval
-
-					for (var i = 0; i < data1.length; ++i) {
-						if (data1[i].ItemCode == itemval){
-							itemAddeddata.push(data1[i]);
-							productViewModel.itemIcon(true);
-							var plusIconChange = '.fa-plus-circle.'+itemval;
-							var newIcon = '.fa-check.'+itemval;
-							$(plusIconChange).addClass('d-none');
-							$(newIcon).removeClass('d-none').addClass('d-inline');
-						}
-					}
-					productViewModel.itemAdded(itemAddeddata);
-
-				}
-			},
-
- itemDelete: function (itemval) {
-   console.log('ttttttttt');
-   console.log(itemval);
-   var itemsJson = 	productViewModel.itemAdded();
-   var findIndex = itemsJson.findIndex(a => a.CpqTableEntryId === itemval)
-   findIndex !== -1 && itemsJson.splice(findIndex , 1)
-   console.log(itemsJson);
-   productViewModel.itemAdded(itemsJson);
-      },
-  // Screen-5 'End'
   // Dynamic search result text on top of table
   searchResultText: ko.pureComputed(function () {
     return productViewModel.searchKeyword()
@@ -459,7 +400,10 @@ const productViewModel = {
                 _.forEach(parsedResponse, function (value, i) {
                   var obj = _.fromPairs(value.map((v) => [v.Name, v.Display]));
                   obj["id"] = i + 1;
-                  obj["offerId"] = "Offer-" + (i + 1);
+                  obj["offerId"] =
+                    productViewModel.productDetail().catalogCode +
+                    "-" +
+                    getAutoOfferId(i + 1);
                   productViewModel.productOffers.push(new ProductOffer(obj));
                 });
                 sendPostMessage();
@@ -605,23 +549,26 @@ const productViewModel = {
   },
   // Add New Offer button handler
   addOffer: function () {
-    console.log("Add offer button clicked");
     productViewModel.productOffers().forEach(function (o) {
       if (o.isEdit()) {
         o.isEdit(false);
       }
     });
     var currentMaxId = _.maxBy(productViewModel.productOffers(), "id");
+    var newId = currentMaxId.id + 1;
     var obj = {
-      id: currentMaxId.id + 1,
-      offerId: "Offer-" + (currentMaxId.id + 1),
+      id: newId,
+      offerId:
+        productViewModel.productDetail().catalogCode +
+        "-" +
+        getAutoOfferId(newId),
       isEdit: true,
+      isNew: true,
     };
     productViewModel.productOffers.unshift(new ProductOffer(obj));
   },
   // Edit Offer button handler
   editOffer: function (offer) {
-    console.log("Edit offer button clicked");
     productViewModel.productOffers().forEach(function (o) {
       if (o.isEdit()) {
         o.isEdit(false);
@@ -631,7 +578,6 @@ const productViewModel = {
   },
   // Copy Offer button handler
   copyOffer: function (offer) {
-    console.log("Copy offer button clicked");
     productViewModel.productOffers().forEach(function (o) {
       if (o.isEdit()) {
         o.isEdit(false);
@@ -639,9 +585,14 @@ const productViewModel = {
     });
     var currentMaxId = _.maxBy(productViewModel.productOffers(), "id");
     var copyOffer = ko.mapping.toJS(offer);
-    copyOffer.id = currentMaxId.id + 1;
-    copyOffer.offerId = "Offer-" + (currentMaxId.id + 1);
+    var newId = currentMaxId.id + 1;
+    copyOffer.id = newId;
+    copyOffer.offerId =
+      productViewModel.productDetail().catalogCode +
+      "-" +
+      getAutoOfferId(newId);
     copyOffer.isEdit = true;
+    copyOffer.isNew = true;
 
     var indexOfCurrentObj = _.findIndex(productViewModel.productOffers(), [
       "id",
@@ -655,7 +606,6 @@ const productViewModel = {
   },
   // Save Offer button handler
   saveOffer: function (offer) {
-    console.log("Save offer button clicked");
     if (
       offer.accessModel() &&
       offer.billingBehavior() &&
@@ -687,6 +637,7 @@ const productViewModel = {
       } else {
         if (offer.isEdit()) {
           offer.isEdit(false);
+          offer.isNew(false);
         }
       }
     } else {
@@ -695,15 +646,18 @@ const productViewModel = {
   },
   // Cancel Offer button handler
   cancelOffer: function (offer) {
-    console.log("Cancel offer button clicked");
-    console.log(offer);
-    if (offer.isEdit()) {
-      offer.isEdit(false);
+    if (offer.isNew()) {
+      productViewModel.productOffers.remove(function (o) {
+        return o.isNew() && o.isEdit() && o.offerId === offer.offerId;
+      });
+    } else {
+      if (offer.isEdit()) {
+        offer.isEdit(false);
+      }
     }
   },
   // Delete Offers button handler
   deleteOffer: function () {
-    console.log("Delete offer button clicked");
     var removedOffers = productViewModel.productOffers.remove(function (offer) {
       return offer.isSelected();
     });
@@ -805,7 +759,6 @@ const productViewModel = {
         contentType: "application/json; charset=utf-8",
       })
         .done(function (data) {
-          console.log(data);
           if (data && data.Status == "Success") {
             toastr.success("Confirmed offers saved successfully.");
 
@@ -895,13 +848,35 @@ const productViewModel = {
         contentType: "application/json; charset=utf-8",
       })
         .done(function (data) {
-          console.log(data);
           if (data && data.Status == "Success") {
             toastr.success("Confirmed offers saved successfully.");
 
-			// Screen-5 'Start'
+            // Get product composition table details
+            var getCompositionApi =
+              "https://sandbox.webcomcpq.com/customapi/executescript?scriptName=GetCompositionApi&username=t_smili_integration&password=Apriori!123&domain=autodeskinc_dev";
 
-			// Screen-5 'End'
+            var input = '{"OfferingId": "0000000"}';
+            var inputJson = {
+              Param: input.replace(
+                /0000000/g,
+                productViewModel.productDetail().id
+              ),
+            };
+
+            $.ajax({
+              type: "GET",
+              url: getCompositionApi,
+              data: $.param(inputJson),
+              processData: false,
+              contentType: "application/json; charset=utf-8",
+            })
+              .done(function (data) {
+                var compositionList = JSON.parse(data);
+                productViewModel.productCompositions(compositionList);
+              })
+              .fail(function () {
+                toastr.error("failed to get product compositions.");
+              });
 
             productViewModel.redirectToNextTab(
               currentTab,
@@ -909,6 +884,7 @@ const productViewModel = {
               nextTab,
               nextTabPanel
             );
+            $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
             sendPostMessage();
           } else {
             toastr.error("Failed to save confirmed offers.");
@@ -986,6 +962,215 @@ const productViewModel = {
         toastr.error("failed to get image.");
       });
   },
+  searchCatalogItems: function (viewAll) {
+    if (viewAll) {
+      productViewModel.searchItemKeyword("");
+    }
+    // Get product composition table details
+    var getCatalogItemsApi =
+      "https://sandbox.webcomcpq.com/customapi/executescript?scriptName=GetItemsApi&username=t_smili_integration&password=Apriori!123&domain=autodeskinc_dev";
+
+    var input = '{"ItemName": "0000000"}';
+    var inputJson = {
+      Param: input.replace(/0000000/g, productViewModel.searchItemKeyword()),
+    };
+
+    $.ajax({
+      type: "GET",
+      url: getCatalogItemsApi,
+      data: $.param(inputJson),
+      processData: false,
+      contentType: "application/json; charset=utf-8",
+    })
+      .done(function (data) {
+        var itemsList = JSON.parse(data);
+        _.forEach(itemsList, function (item) {
+          if (
+            _.some(productViewModel.productCompositions(), [
+              "ItemCode",
+              item.ItemCode,
+            ])
+          ) {
+            item["isSelected"] = ko.observable(true);
+          } else {
+            item["isSelected"] = ko.observable(false);
+          }
+        });
+        productViewModel.catalogItems(itemsList);
+      })
+      .fail(function () {
+        toastr.error("failed to get catalog items.");
+      });
+  },
+  // Delete composition button handler
+  deleteComposition: function (composition) {
+    var removedComposition = productViewModel.productCompositions.remove(
+      function (c) {
+        return c.ItemCode === composition.ItemCode;
+      }
+    );
+
+    _.forEach(productViewModel.catalogItems(), function (item) {
+      if (_.some(removedComposition, ["ItemCode", item.ItemCode])) {
+        if (item.isSelected()) {
+          item.isSelected(false);
+        }
+      }
+    });
+
+    var idsToRemove = _.reject(
+      _.map(removedComposition, "CpqTableEntryId"),
+      _.isEmpty
+    );
+    if (idsToRemove.length > 0) {
+      var deleteCompositionAPi =
+        "https://sandbox.webcomcpq.com/customapi/executescript?scriptName=DeleteCompositionAPi&username=t_smili_integration &password=Apriori!123&domain=autodeskinc_dev";
+
+      var inputObj = {
+        Param: JSON.stringify({
+          CpqTableEntryId: idsToRemove,
+        }),
+      };
+
+      $.ajax({
+        type: "POST",
+        url: deleteCompositionAPi,
+        data: JSON.stringify(inputObj),
+        contentType: "application/json; charset=utf-8",
+      }).done(function (data) {
+        if (data && data.Status == "Success") {
+          toastr.success("Composition deleted successfully.");
+        }
+      });
+    }
+  },
+  // Add composition button handler
+  addComposition: function (catalogItem) {
+    var moveCatalogItem = ko.mapping.toJS(catalogItem);
+    moveCatalogItem["CompositionItemId"] = moveCatalogItem.ItemCode;
+    moveCatalogItem["CpqTableEntryId"] = "";
+    moveCatalogItem["OfferingId"] = productViewModel.productDetail().id;
+    moveCatalogItem["Quantity"] = 0;
+
+    productViewModel.productCompositions.unshift(moveCatalogItem);
+    catalogItem.isSelected(true);
+  },
+  // Save For Later Composition button handler
+  sflComposition: function (currentTab, currentTabPanel) {
+    var validationMsg = "";
+    if (productViewModel.productCompositions().length === 0) {
+      validationMsg = "Please add atleast one item for composition.";
+    }
+
+    if (!validationMsg) {
+      var saveCompositionApi =
+        "https://sandbox.webcomcpq.com/customapi/executescript?scriptName=SaveComposition&username=t_smili_integration &password=Apriori!123&domain=autodeskinc_dev";
+
+      var inputObj = {
+        Param: JSON.stringify({
+          ProductId: productViewModel.productDetail().id,
+          compositions: productViewModel.productCompositions(),
+        }),
+      };
+
+      $.ajax({
+        type: "POST",
+        url: saveCompositionApi,
+        data: JSON.stringify(inputObj),
+        contentType: "application/json; charset=utf-8",
+      })
+        .done(function (data) {
+          if (data && data.Status == "Success") {
+            toastr.success("Product compositions saved successfully.");
+
+            $(currentTab).removeClass("active");
+            $(currentTabPanel).removeClass("show active");
+            $("#adsk-select-offering-tab").addClass("active");
+            $("#adsk-select-offering").addClass("show active");
+            productViewModel.resetProperties();
+          } else {
+            toastr.error("Failed to save compositions.");
+          }
+        })
+        .fail(function () {
+          toastr.error("Failed to save compositions.");
+        });
+    } else {
+      toastr.error(validationMsg);
+    }
+  },
+  // Continue composition button handler
+  continueComposition: function (
+    currentTab,
+    currentTabPanel,
+    nextTab,
+    nextTabPanel
+  ) {
+    var validationMsg = "";
+    if (productViewModel.productCompositions().length === 0) {
+      validationMsg = "Please add atleast one item for composition.";
+    }
+
+    if (!validationMsg) {
+      var saveCompositionApi =
+        "https://sandbox.webcomcpq.com/customapi/executescript?scriptName=SaveComposition&username=t_smili_integration &password=Apriori!123&domain=autodeskinc_dev";
+
+      var inputObj = {
+        Param: JSON.stringify({
+          ProductId: productViewModel.productDetail().id,
+          compositions: productViewModel.productCompositions(),
+        }),
+      };
+
+      $.ajax({
+        type: "POST",
+        url: saveCompositionApi,
+        data: JSON.stringify(inputObj),
+        contentType: "application/json; charset=utf-8",
+      })
+        .done(function (data) {
+          if (data && data.Status == "Success") {
+            toastr.success("Product compositions saved successfully.");
+
+            productViewModel.redirectToNextTab(
+              currentTab,
+              currentTabPanel,
+              nextTab,
+              nextTabPanel
+            );
+            sendPostMessage();
+          } else {
+            toastr.error("Failed to save compositions.");
+          }
+        })
+        .fail(function () {
+          toastr.error("Failed to save compositions.");
+        });
+    } else {
+      toastr.error(validationMsg);
+    }
+  },
+  // Composition Back button handler
+  backComposition: function (
+    currentTab,
+    currentTabPanel,
+    previousTab,
+    previousTabPanel
+  ) {
+    $(currentTab).removeClass("active");
+    $(currentTabPanel).removeClass("show active");
+    $(previousTab).addClass("active");
+    $(previousTabPanel).addClass("show active");
+    productViewModel.searchItemKeyword("");
+    productViewModel.catalogItems.removeAll();
+    productViewModel.productCompositions.removeAll();
+  },
+  // Parse date format
+  parseDateFormat: function (date) {
+    return ko.computed(function () {
+      return date ? new Date(date).toISOString().slice(0, 10) : "";
+    });
+  },
 };
 ko.applyBindings(
   productViewModel,
@@ -1044,8 +1229,8 @@ $(function () {
   getAccessTokenByPost();
 
   // Disable non active tabs
-  // $(".nav li").not(".active").find("a").addClass("disabled");
-  // $(".nav li").not(".active").find("a").removeAttr("data-toggle");
+  $(".nav li").not(".active").find("a").addClass("disabled");
+  $(".nav li").not(".active").find("a").removeAttr("data-toggle");
 
   // Subscribe for Add-On Offering radio button
   productViewModel.addOnOffering.subscribe(function (value) {
@@ -1059,6 +1244,10 @@ $(function () {
     productViewModel.productOffers().forEach(function (o) {
       o.isSelected(value);
     });
+  });
+
+  $('a[data-toggle="tab"]').on("shown.bs.tab", function (e) {
+    $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
   });
 });
 
@@ -1088,38 +1277,17 @@ var ProductOffer = function (data, parent) {
   this.status = ko.observable(data.status ? data.status : "Created");
   this.isSelected = ko.observable(data.isSelected ? data.isSelected : false);
   this.isEdit = ko.observable(data.isEdit ? data.isEdit : false);
+  this.isNew = ko.observable(data.isNew ? data.isNew : false);
 };
 
-
-/*Screen-5 'Start'*/
-function to_view_all_item(){
-	$.ajax({
-        type: "GET",
-        url: "https://sandbox.webcomcpq.com/customapi/executescript?scriptName=GetItemsApi&username=t_smili_integration&password=Apriori!123&domain=autodeskinc_dev",
-        data: {"Param":'{"ItemName":""}'},
-        dataType: "json",
-        contentType: "application/json; charset=utf-8",
-      })
-        .done(function (data) {
-			var json_data = JSON.parse(data);
-			var gene_tbl = '';
-			$(json_data).each(function(index){
-				var dict_val = json_data[index];
-				gene_tbl += '<tr>';
-				for (key in dict_val)
-				{
-				  if(key == 'ItemName' || key == 'ProductLineCode' || key == 'StartDate' || key == 'EndDate')
-				  {
-					gene_tbl += '<td>'+dict_val[key]+'</td>';
-				  }
-				}
-				gene_tbl += '<td class="text-center"><i class="fas fa-plus-circle"></i><i class="fas fa-check d-none"></i></td></tr>';
-			});
-			$('table#adsk-crt-comp-lft-tbl tbody').html(gene_tbl);
-        })
-        .fail(function () {
-          console.log("failed to get extended product");
-		})
+function getAutoOfferId(id) {
+  if (id < 9) {
+    return "000" + id;
+  } else if (id >= 9 && id < 99) {
+    return "00" + id;
+  } else if (id >= 99 && id < 999) {
+    return "0" + id;
+  } else {
+    return id;
+  }
 }
-
-/*Screen-5 'End'*/

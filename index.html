@@ -157,10 +157,8 @@
                         <a href="" class="font-size-14 com-a font-weight-bold" data-bind="text: name"></a>
                       </td>
                       <td class="bg-white text-muted font-size-14" data-bind="text: id"></td>
-                      <td class="bg-white text-muted font-size-14" data-bind="text: modifiedDate"></td>
-                      <td class="bg-white text-muted font-size-14">
-                        27 JAN 2021
-                      </td>
+                      <td class="bg-white text-muted font-size-14"></td>
+                      <td class="bg-white text-muted font-size-14"></td>
                       <td class="bg-white font-size-14">
                         <button type="button" class="btn btn-sm btn-block btn-primary-bg text-white"
                           data-bind="click: $parent.configureProduct.bind(this, $data)">
@@ -770,157 +768,172 @@
               <h5 class="title float-left w-100 m-0 pl-0 mt-4">
                 Create composition
               </h5>
-            </div>
-
-            <div class="col-md-6 col-lg-6 col-sm-6 col-xs-6 float-left result-table">
-              <h6 class="title float-left font-size-14 w-100 m-0 pl-0 mt-4 mb-4">
-                <span>FIND ITEMS TO ADD TO THIS OFFERING</span>
-              </h6>
-              <div class="float-left border mb-2 crt-cmpt-lft-hgt rounded w-100 mb-4">
-                <div class='form-group col-lg-12 float-left mb-0 bg-clr'>
-                  <form data-bind="click: itemSearch.bind(this, false)">
-                    <div class="mt-3 col-lg-12 p-0 float-left">
-                      <div class="form-group col-lg-9 p-0 float-left">
-                        <input type="text" class="form-control" data-bind="value:itemSearchkeyword" placeholder="Search on item name or ID"/>
-                        <i class="fa fa-search search_icon_input" aria-hidden="true"></i>
-						<button type="submit" class="btn btn-outline-primary d-none">
-						  SEARCH
-						</button>
-                      </div>
-                      <div class="ml-3 float-left">
-                        <a href="" data-bind="click: itemSearch.bind(this, true)" class="font-size-14 com-a font-weight-bold">VIEW ALL ITEMS</a>
-                      </div>
+              <div class="col-lg-12 float-left p-0 mb-4 mt-3 create-composition">
+                <div class="col-lg-6 pl-0 float-left">
+                  <h6 class="title float-left font-size-14 w-100 mt-3 mb-3">
+                    FIND ITEMS TO ADD TO THIS OFFERING
+                  </h6>
+                  <div class="col-lg-12 p-0 float-left border rounded box-height">
+                    <div class='col-lg-12 float-left header-bg'>
+                      <form class="mt-3" data-bind="submit: searchCatalogItems.bind(this, false)">
+                        <div class="form-group col-lg-9 p-0 float-left">
+                          <input type="text" class="form-control" data-bind="value: searchItemKeyword"
+                            placeholder="Search on item name or ID" />
+                          <i class="fa fa-search" aria-hidden="true"></i>
+                        </div>
+                        <div class="ml-3 float-left">
+                          <a href="" class="font-size-14 com-a font-weight-bold"
+                            data-bind="click: searchCatalogItems.bind(this, true)">VIEW ALL ITEMS</a>
+                        </div>
+                        <button type="submit" style="display: none;"></button>
+                      </form>
+                      <h6 class="title float-left font-size-14 font-weight-bold w-100 mb-2 mt-2">
+                        <span data-bind="text: catalogItems().length"></span><span> items matched to </span>
+                        <span data-bind="text: searchItemKeyword"></span>
+                      </h6>
                     </div>
-                  </form>
-
+                    <table id="adsk-itemsTable" class="table display" style="width:100%">
+                      <thead class="header-bg">
+                        <tr>
+                          <th class="border-top-0 text-muted font-size-14 sorting font-weight-normal">
+                            ITEM NAME
+                          </th>
+                          <th class="border-top-0 text-muted font-size-14 sorting font-weight-normal">
+                            PLC
+                          </th>
+                          <th class="border-top-0 text-muted font-size-14 sorting font-weight-normal">
+                            START DATE
+                          </th>
+                          <th class="border-top-0 text-muted font-size-14 sorting font-weight-normal">
+                            END DATE
+                          </th>
+                          <th class="border-top-0 text-muted font-size-14 font-weight-normal">
+                            &nbsp;
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody data-bind="datatable: catalogItems, tableOptions: { autoWidth: true, searching: false,
+                        ordering: true, paging: false, info: false, scrollY: '237px', scrollX: false, order: [],
+                        columnDefs: [
+                          { type: 'string', targets: 0 },
+                          { type: 'string', targets: 1 },
+                          { type: 'date', width: '100px', targets: 2 },
+                          { type: 'date', width: '100px', targets: 3 },
+                          { orderable: false, targets: 4 },
+                        ]}">
+                        <tr>
+                          <td class="bg-white">
+                            <a href="" class="font-size-14 com-a font-weight-bold" data-bind="text: ItemName"></a>
+                          </td>
+                          <td class="bg-white text-muted font-size-14" data-bind="text: ProductLineCode"></td>
+                          <td class="bg-white text-muted font-size-14"
+                            data-bind="text: productViewModel.parseDateFormat(StartDate)">
+                          </td>
+                          <td class="bg-white text-muted font-size-14"
+                            data-bind="text: productViewModel.parseDateFormat(EndDate)">
+                          </td>
+                          <td class="bg-white text-muted font-size-22">
+                            <!-- ko if: !isSelected() -->
+                            <i class="fas fa-plus-circle cursor-pointer"
+                              data-bind="click: $parent.addComposition.bind(this, $data)"></i>
+                            <!-- /ko -->
+                            <!-- ko if: isSelected() -->
+                            <i class="fas fa-check cursor-pointer"></i>
+                            <!-- /ko -->
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-                <table id="adsk-crt-comp-lft-tbl" class="table display nowrap mb-0 dataTable">
-                  <thead class="bg-clr">
-                    <tr>
-                      <th class="border-top-0 text-muted font-size-14 sorting font-weight-normal">
-                        ITEM NAME
-                      </th>
-                      <th class="border-top-0 text-muted font-size-14 sorting font-weight-normal">
-                        PLC/SC
-                      </th>
-                      <th class="border-top-0 text-muted font-size-14 sorting font-weight-normal">
-                        START DATE
-                      </th>
-                      <th class="border-top-0 text-muted font-size-14 sorting font-weight-normal">
-                        END DATE
-                      </th>
-                      <th class="border-top-0 text-muted font-size-14 font-weight-normal">
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody data-bind="datatable: addToOffering, tableOptions: { autoWidth: true, searching: false,
-                    ordering: true, paging: false, pageLength: 10, pagingType: 'simple_numbers',order: [[0, 'asc']],
-                    columnDefs: [
-                      { type: 'string', targets: 0 },
-                      { type: 'string', targets: 1 },
-                      { type: 'string', targets: 2 },
-                      { type: 'string', targets: 3 },
-                      { type: 'string', targets: 4 },
-                    ],
-                  }">
-					<tr>
-						<td class="bg-white text-muted font-size-14 font-weight-bold" data-bind="text: ItemName"></td>
-						<td class="bg-white text-muted font-size-14" data-bind="text: ProductLineCode"></td>
-						<td class="bg-white text-muted font-size-14" data-bind="text: StartDate"></td>
-						<td class="bg-white text-muted font-size-14" data-bind="text: EndDate"></td>
-						<td class="text-center">
-							<i data-bind="click: productViewModel.itemSearch.bind(this, ItemCode),attr:{'class':'fas fa-plus-circle '+ItemCode}" ></i>
-							<i data-bind="attr:{'class':'fas fa-check d-none '+ItemCode}"></i>
-						</td>
-					</tr>
-
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="col-md-6 col-lg-6 col-sm-6 col-xs-6 float-left result-table mb-4">
-              <h6 class="title float-left font-size-14 w-100 m-0 pl-0 mt-4 mb-4">
-                <span>ITEMS ADDED</span>
-              </h6>
-
-              <div class="float-left border mb-2 w-100 crt-cmpt-rgt-hgt rounded">
-                <div id="offering_items_added_count" class="dft-itm-ad p-2 pl-3 bg-clr">
-
+                <div class="col-lg-6 pr-0 float-left">
+                  <h6 class="title float-left font-size-14 w-100 mt-3 mb-3">
+                    ITEMS ADDED
+                  </h6>
+                  <div class="col-lg-12 p-0 float-left border rounded box-height">
+                    <div class='col-lg-12 float-left header-bg'>
+                      <h6 class="title float-left font-size-14 font-weight-bold w-100 mb-2 mt-3">
+                        <span data-bind="text: productCompositions().length"></span><span> items added to this
+                          offering</span>
+                      </h6>
+                    </div>
+                    <table id="adsk-compositionTable" class="table display" style="width:100%">
+                      <thead class="header-bg">
+                        <tr>
+                          <th class="border-top-0 text-muted font-size-14 sorting font-weight-normal">
+                            ITEM NAME
+                          </th>
+                          <th class="border-top-0 text-muted font-size-14 sorting font-weight-normal">
+                            PLC
+                          </th>
+                          <th class="border-top-0 text-muted font-size-14 sorting font-weight-normal">
+                            SERVICE CODE
+                          </th>
+                          <th class="border-top-0 text-muted font-size-14 sorting font-weight-normal">
+                            UOM
+                          </th>
+                          <th class="border-top-0 text-muted font-size-14 sorting font-weight-normal">
+                            QUANTITY
+                          </th>
+                          <th class="border-top-0 text-muted font-size-14 font-weight-normal">
+                            &nbsp;
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody data-bind="datatable: productCompositions, tableOptions: { autoWidth: true, searching: false,
+                        ordering: true, paging: false, info: false, scrollY: '299px', scrollX: false, order: [],
+                        columnDefs: [
+                          { type: 'string', targets: 0 },
+                          { type: 'string', targets: 1 },
+                          { type: 'string', targets: 2 },
+                          { orderable: false, targets: 3 },
+                          { orderable: false, width: '80px', targets: 4 },
+                          { orderable: false, targets: 5 },
+                        ]}">
+                        <tr>
+                          <td class="bg-white">
+                            <a href="" class="font-size-14 com-a font-weight-bold" data-bind="text: ItemName"></a>
+                          </td>
+                          <td class="bg-white text-muted font-size-14" data-bind="text: ProductLineCode"></td>
+                          <td class="bg-white text-muted font-size-14" data-bind="text: ItemCode"></td>
+                          <td class="bg-white text-muted font-size-14" data-bind="text: ServiceLimitUoM"></td>
+                          <td class="bg-white text-muted font-size-14">
+                            <input type="text" class="form-control" data-bind="value: Quantity">
+                          </td>
+                          <td class="bg-white text-muted font-size-22">
+                            <i class="far fa-trash-alt cursor-pointer"
+                              data-bind="click: $parent.deleteComposition.bind(this, $data)"></i>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-                <table id="adsk-crt-comp-rgt-tbl" class="table display mb-0 nowrap dataTable">
-                  <thead class="bg-clr">
-                    <tr>
-                      <th class="border-top-0 text-muted font-size-14 sorting font-weight-normal">
-                        ITEM NAME
-                      </th>
-                      <th class="border-top-0 text-muted font-size-14 sorting font-weight-normal">
-                        PLC/SC
-                      </th>
-                      <th class="border-top-0 text-muted font-size-14 sorting font-weight-normal">
-                        SERVICE CODE
-                      </th>
-                      <th class="border-top-0 text-muted font-size-14 font-weight-normal">
-                        UOM
-                      </th>
-                      <th class="border-top-0 text-muted font-size-14 font-weight-normal">
-                        QUANTITY
-                      </th>
-                      <th class="border-top-0 text-muted font-size-14 font-weight-normal"></th>
-                    </tr>
-                  </thead>
-                  <tbody data-bind="datatable: itemAdded, tableOptions: { autoWidth: true, searching: false,
-                    ordering: true, paging: false, pageLength: 10, pagingType: 'simple_numbers',order: [[0, 'asc']],
-                    columnDefs: [
-                      { type: 'string', targets: 0 },
-                      { type: 'string', targets: 1 },
-                      { type: 'string', targets: 2 },
-                      { type: 'string', targets: 3 },
-                      { type: 'string', targets: 4 },
-                    ],
-                  }">
-
-					<tr>
-						<td class="bg-white text-muted font-size-14 font-weight-bold" data-bind="text: ItemName"></td>
-						<td class="bg-white text-muted font-size-14" data-bind="text: ProductLineCode"></td>
-						<td class="bg-white text-muted font-size-14" data-bind="text: ItemCode"></td>
-						<td class="bg-white text-muted font-size-14" data-bind="text: ServiceLimitUoM"></td>
-						<td class="bg-white text-muted font-size-14">
-							<input class="w-100" type="text" />
-						</td>
-						<td class="text-center"><i class="fas fa-trash-alt" data-bind="click: productViewModel.itemDelete.bind(this, CpqTableEntryId)"></i></i></td>
-					</tr>
-
-                  </tbody>
-                </table>
-
-
               </div>
-            </div>
-
-            <!--Footer-'Start'-->
-            <div class="pl-3 pr-3">
               <span class="col-lg-12 float-left p-0 border-bottom border-2"></span>
-            </div>
-            <div class="col-lg-12 float-left mt-4 mb-5">
-              <div class="col-lg-6 float-left d-flex justify-content-start p-0">
-                <button type="button" class="btn btn-footer btn-outline-primary">
-                  BACK
-                </button>
+              <div class="col-lg-12 float-left p-0 mt-4 mb-5">
+                <div class="col-lg-6 float-left d-flex justify-content-start p-0">
+                  <button type="button" class="btn btn-footer btn-outline-primary"
+                    data-bind="click: backComposition.bind(this, '#adsk-create-composition-tab', '#adsk-create-composition', '#adsk-confirm-offers-tab', '#adsk-confirm-offers')">
+                    BACK
+                  </button>
+                </div>
+                <div class="col-lg-6 float-left d-flex justify-content-end p-0">
+                  <button type="button" class="btn btn-footer btn-outline-primary"
+                    data-bind="click: cancelButtonClick.bind(this, '#adsk-create-composition-tab', '#adsk-create-composition')">
+                    CANCEL
+                  </button>
+                  <button type="button" class="btn btn-footer btn-outline-primary ml-2"
+                    data-bind="click: sflComposition.bind(this, '#adsk-create-composition-tab', '#adsk-create-composition')">
+                    SAVE FOR LATER
+                  </button>
+                  <button type="button" class="btn btn-footer btn-primary-bg text-white ml-2"
+                    data-bind="click: continueComposition.bind(this, '#adsk-create-composition-tab', '#adsk-create-composition', '#adsk-review-offering-tab', '#adsk-review-offering')">
+                    CONTINUE
+                  </button>
+                </div>
               </div>
-              <div class="col-lg-6 float-left d-flex justify-content-end p-0">
-                <button type="button" class="btn btn-footer btn-outline-primary">
-                  CANCEL
-                </button>
-                <button type="button" class="btn btn-footer btn-outline-primary ml-2">
-                  SAVE FOR LATER
-                </button>
-                <button type="button" class="btn btn-footer btn-primary-bg text-white ml-2">
-                  CONTINUE
-                </button>
-              </div>
             </div>
-            <!--Footer-'End'-->
           </div>
           <!-- Tab-5 'End' -->
           <!-- Tab 6 start -->
